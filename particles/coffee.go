@@ -12,7 +12,20 @@ type Coffee struct {
 }
 
 func ascii(row, col int, counts [][]int) rune {
-    return '}'
+  count := counts[row][col]
+  if count < 3{
+    return ' '
+  }
+  if count < 6{
+    return '.'
+  }
+  if count < 9{
+    return ':'
+  }
+  if count < 12{
+    return '{'
+  }
+  return '}'
 }
 
 func reset (p *Particle, params *ParticleParams) {
