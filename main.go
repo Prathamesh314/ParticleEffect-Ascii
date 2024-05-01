@@ -1,11 +1,23 @@
+
 package main
 
 import (
-	"fmt"
 	"ascii/particles"
+	"fmt"
+	"time"
+
 )
 
 func main() {
-	fmt.Println("Hello from main")
-	particles.Hello()
+	coffee := particles.NewCoffee(5, 3)
+	timer := time.NewTicker(100 * time.Millisecond)
+	coffee.Start()
+
+	for {
+		<-timer.C
+    fmt.Print("\033[H\033[2J")
+		coffee.Update()
+		fmt.Println(coffee.Display())
+	}
 }
+

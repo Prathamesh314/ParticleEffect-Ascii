@@ -1,104 +1,111 @@
+
 package particles
 
 import (
-  "time"
-  "math"
-  "math/rand"
-
+	"math"
+	"strings"
+	"time"
 )
 
-type Particle struct{
+type Particle struct {
 	lifetime int64
-  speed float64
-
-  X float64
-  Y float64
+	speed    float64
+	X        float64
+	Y        float64
 }
 
-type ParticleParams struct{
-  MaxLife int64
-  MaxSpeed float64
-  
-  ParticleCount int
-  X int
-  Y int
-
-  nextPosition NextPosition
-  ascii Ascii
-  reset Reset
+type ParticleParams struct {
+	MaxLife       int64
+	MaxSpeed      float64
+	ParticleCount int
+	X             int
+	Y             int
+	nextPosition  NextPosition
+	ascii         Ascii
+	reset         Reset
 }
 
-type NextPosition func(particle* Particle, deltaMS int64)
-type Ascii func(x, y int, count [][]int) rune
-type Reset func(particle* Particle, params *ParticleParams)
+type NextPosition func(particle *Particle, deltaMS int64)
+type Ascii func(row, col int, counts [][]int) string
+type Reset func(particle *Particle, params *ParticleParams)
 
-
-type ParticleSystem struct{
-  ParticleParams
-  particles []*Particle
-  lastTime int64
+type ParticleSystem struct {
+	ParticleParams
+	particles []*Particle
+	lastTime  int64
 }
 
-func NewParticleSystem(params ParticleParams) ParticleSystem{
-  return ParticleSystem{
-    ParticleParams: params,
-    lastTime: time.Now().UnixMilli(),
+func NewParticleSystem(params ParticleParams) ParticleSystem {
+  particles := make([]* Particle, 0)
+  for i:=0; i<params.ParticleCount; i++{
+    particles = append(particles, &Particle{})
   }
+	return ParticleSystem{
+		ParticleParams: params,
+		lastTime:       time.Now().UnixMilli(),
+    particles: particles,
+	}
 }
 
-
-func (ps *ParticleSystem) Start(){
-  for _, p := range ps.particles{
-    ps.reset(p, &ps.ParticleParams)
-  }
+func (ps *ParticleSystem) Start() {
+	for _, p := range ps.particles {
+		ps.reset(p, &ps.ParticleParams)
+	}
 }
-
 
 func (ps *ParticleSystem) Update() {
-  now := time.Now().UnixMilli()
-  delta := now - ps.lastTime
-  ps.lastTime = now
+	now := time.Now().UnixMilli()
+	delta := now - ps.lastTime
+	ps.lastTime = now
 
-  for _, p := range ps.particles{
-    ps.nextPosition(p, delta)
+	for _, p := range ps.particles {
+		ps.nextPosition(p, delta)
 
-    if p.y >= float64(ps.Y) || p.x >= float64(ps.X) {
-      ps.reset(p, &ps.ParticleParams)
-    }
-  }
-
+		if p.Y >= float64(ps.Y) || p.X >= float64(ps.X) || p.lifetime <= 0{
+			ps.reset(p, &ps.ParticleParams)
+		}
+	}
 }
 
-func (ps* ParticleSystem) Display() [][]rune {
-  counts := make([][]int, 0)
-  
-  for row:= 0; row<ps.Y; row++ {
-    count := make([]int, 0)
-    for col:= 0; col<ps.X; col++ {
-      count = append(count, 0)
-    }
-
-    counts = append(counts, count)
-  }
-
-  for _, p := range ps.particles{
-    row := int(math.Floor(p.y))
-    col := int(math.Floor(p.x))
-
-    counts[row][col]++
-  }
-
-  out := make([][]rune, 0)
-
-  for r, row := range counts{
-    outRow := make([]rune, 0)
-    for c := range row {
-      outRow = append(outRow, ps.ascii(r, c, counts))
-    }
-
-    out = append(out, outRow)
-  }
-
-  return out
-
+func Reverse[S ~[]E, E any](s S) {
+	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
+		s[i], s[j] = s[j], s[i]
+	}
 }
+
+
+func (ps *ParticleSystem) Display() string {
+	counts := make([][]int, ps.Y)
+
+	for row := range counts {
+		counts[row] = make([]int, ps.X)
+	}
+
+	for _, p := range ps.particles {
+		row := int(math.Floor(p.Y))
+		col := int(math.Floor(p.X))
+		if row >= 0 && row < len(counts) && col >= 0 && col < len(counts[0]) {
+			counts[row][col]++
+		}
+	}
+
+	out := make([][]string, len(counts))
+
+	for r := range counts {
+		out[r] = make([]string, len(counts[r]))
+		for c := range counts[r] {
+			out[r][c] = ps.ascii(r, c, counts)
+		}
+	}
+
+	Reverse(out)
+
+	outStr := make([]string, len(out))
+	for i, row := range out {
+		outStr[i] = strings.Join(row, "")
+	}
+
+	return strings.Join(outStr, "\n")
+}
+
+
