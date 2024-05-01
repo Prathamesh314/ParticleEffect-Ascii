@@ -3,6 +3,7 @@ package particles
 import (
   "time"
   "math"
+  "math/rand"
 
 )
 
@@ -10,8 +11,8 @@ type Particle struct{
 	lifetime int64
   speed float64
 
-  x float64
-  y float64
+  X float64
+  Y float64
 }
 
 type ParticleParams struct{
@@ -29,7 +30,7 @@ type ParticleParams struct{
 
 type NextPosition func(particle* Particle, deltaMS int64)
 type Ascii func(x, y int, count [][]int) rune
-type Reset func(particle* Particle, params *ParticleParams) rune
+type Reset func(particle* Particle, params *ParticleParams)
 
 
 type ParticleSystem struct{
