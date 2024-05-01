@@ -2,6 +2,6 @@ package particles
 
 import "fmt"
 
-func hello(){
+func Hello(){
 	fmt.Println("Hii from particles")
 }
