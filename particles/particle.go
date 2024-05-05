@@ -1,4 +1,3 @@
-
 package particles
 
 import (
@@ -20,14 +19,17 @@ type ParticleParams struct {
 	ParticleCount int
 	X             int
 	Y             int
+	XScale        float64
 	nextPosition  NextPosition
 	ascii         Ascii
 	reset         Reset
 }
 
-type NextPosition func(particle *Particle, deltaMS int64)
-type Ascii func(row, col int, counts [][]int) string
-type Reset func(particle *Particle, params *ParticleParams)
+type (
+	NextPosition func(particle *Particle, deltaMS int64)
+	Ascii        func(row, col int, counts [][]int) string
+	Reset        func(particle *Particle, params *ParticleParams)
+)
 
 type ParticleSystem struct {
 	ParticleParams
@@ -36,14 +38,14 @@ type ParticleSystem struct {
 }
 
 func NewParticleSystem(params ParticleParams) ParticleSystem {
-  particles := make([]* Particle, 0)
-  for i:=0; i<params.ParticleCount; i++{
-    particles = append(particles, &Particle{})
-  }
+	particles := make([]*Particle, 0)
+	for i := 0; i < params.ParticleCount; i++ {
+		particles = append(particles, &Particle{})
+	}
 	return ParticleSystem{
 		ParticleParams: params,
 		lastTime:       time.Now().UnixMilli(),
-    particles: particles,
+		particles:      particles,
 	}
 }
 
@@ -61,7 +63,7 @@ func (ps *ParticleSystem) Update() {
 	for _, p := range ps.particles {
 		ps.nextPosition(p, delta)
 
-		if p.Y >= float64(ps.Y) || p.X >= float64(ps.X) || p.lifetime <= 0{
+		if p.Y >= float64(ps.Y) || p.X >= float64(ps.X) || p.lifetime <= 0 {
 			ps.reset(p, &ps.ParticleParams)
 		}
 	}
@@ -73,8 +75,7 @@ func Reverse[S ~[]E, E any](s S) {
 	}
 }
 
-
-func (ps *ParticleSystem) Display() string {
+func (ps *ParticleSystem) Display() []string {
 	counts := make([][]int, ps.Y)
 
 	for row := range counts {
@@ -83,7 +84,7 @@ func (ps *ParticleSystem) Display() string {
 
 	for _, p := range ps.particles {
 		row := int(math.Floor(p.Y))
-		col := int(math.Floor(p.X))
+		col := int(math.Round(p.X))
 		if row >= 0 && row < len(counts) && col >= 0 && col < len(counts[0]) {
 			counts[row][col]++
 		}
@@ -105,7 +106,6 @@ func (ps *ParticleSystem) Display() string {
 		outStr[i] = strings.Join(row, "")
 	}
 
-	return strings.Join(outStr, "\n")
+	// return strings.Join(outStr, "\n")
+	return outStr
 }
-
-
